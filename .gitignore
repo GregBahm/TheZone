@@ -1,14 +1,13 @@
-# This .gitignore file should be placed at the root of your Unity project directory
-#
-# Get latest from https://github.com/github/gitignore/blob/master/Unity.gitignore
-#
-/[Ll]ibrary/
-/[Tt]emp/
-/[Oo]bj/
-/[Bb]uild/
-/[Bb]uilds/
-/[Ll]ogs/
-/[Mm]emoryCaptures/
+
+So I'd prefer to give this a string. 
+
+TheZoneUnity/[Ll]ibrary/
+TheZoneUnity/[Tt]emp/
+TheZoneUnity/[Oo]bj/
+TheZoneUnity/[Bb]uild/
+TheZoneUnity/[Bb]uilds/
+TheZoneUnity/[Ll]ogs/
+TheZoneUnity/[Mm]emoryCaptures/
 
 # Asset meta data should only be ignored when the corresponding asset is also ignored
 !/[Aa]ssets/**/*.meta
