@@ -5,14 +5,36 @@ using UnityEngine;
 public class BallBehavior : MonoBehaviour
 {
     [SerializeField]
-    private float offset;
+    private float gain;
 
     [SerializeField]
-    private float scale;
+    private float resetHeight;
+
+    private float velocity;
+
+    Vector3 startingPos;
+
+    private void Start()
+    {
+        startingPos = transform.position;
+    }
 
     void Update()
     {
-        float pos = Mathf.Sin(Time.time + offset) * scale;
-        transform.position = new Vector3(transform.position.x, pos, transform.position.z);
+        if(transform.position.y < 0)
+        {
+            velocity = gain * 10 * Time.deltaTime;
+        }
+        else
+        {
+            velocity += gain * Time.deltaTime;
+        }
+        transform.position = new Vector3(transform.position.x, transform.position.y + velocity, transform.position.z);
+
+        if(transform.position.y > resetHeight)
+        {
+            velocity = 0;
+            transform.position = startingPos;
+        }
     }
 }

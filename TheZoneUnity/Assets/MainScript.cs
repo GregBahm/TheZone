@@ -70,7 +70,7 @@ public class MainScript : MonoBehaviour
             float yDelta = startOrbitMouse.y - Input.mousePosition.y;
             float yRot = yDelta * YRotationSpeed;
             float finalXRot = startOrbitCamera.x + yRot;
-            finalXRot = Mathf.Clamp(finalXRot, 10, 89);
+            finalXRot = Mathf.Clamp(finalXRot, 2, 89);
             CameraOrbitTransform.rotation = Quaternion.Euler(finalXRot, startOrbitCamera.y + xRot, 0);
         }
     }
