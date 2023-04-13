@@ -13,7 +13,8 @@ Shader "Unlit/GeometryShaderStyle"
         LOD 100
 
         Pass
-        {
+        { 
+            Tags { "LightMode" = "UniversalForward" }
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
@@ -66,6 +67,7 @@ Shader "Unlit/GeometryShaderStyle"
         Tags { "RenderType" = "Transparent" }
         Pass
         {
+            Tags { "LightMode" = "SRPDefaultUnlit" }
             Blend SrcAlpha OneMinusSrcAlpha
             Cull Front
             ZWrite Off

@@ -1,14 +1,11 @@
-// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
-
-Shader "Unlit/VertexShaderStyle"
+Shader "Unlit/ParticleStyle"
 {
     Properties
     {
-        _WaterTexture("Water Texture", 2D) = "white" {}
-        _Depth("Depth", Range(0, 1)) = .0005
-        _ColorA("Color A", Color) = (1,1,1,1)
-        _ColorB("Color B", Color) = (1,1,1,1)
-        _ColorC("Color C", Color) = (1,1,1,1)
+        _ReflectionIntensity("_ReflectionIntensity", Float) = 1
+        _ReflectionFadeRate("ReflectionFadeRate", Float) = 1
+        _ColorB("Shadow Color", Color) = (1,1,1,1)
+        _ColorC("Secondary Light", Color) = (1,1,1,1)
         _UnderwaterColor("Underwater Color", Color) = (1,1,1,1)
         _ReflectColor("Reflect Color", Color) = (1,1,1,1)
         _ShadowCol("Shadow Color", Color) = (1,1,1,1)
@@ -29,6 +26,7 @@ Shader "Unlit/VertexShaderStyle"
             {
                 float4 vertex : POSITION;
                 float3 normal : NORMAL;
+                float3 color : COLOR0;
             };
 
             struct v2f
@@ -36,9 +34,9 @@ Shader "Unlit/VertexShaderStyle"
                 float4 vertex : SV_POSITION;
                 float3 worldNormal : NORMAL;
                 float4 worldPos : TEXCOORD1;
+                float3 color : COLOR0;
             };
 
-            float3 _ColorA;
             float3 _ColorB;
             float3 _ColorC;
             float3 _UnderwaterColor;
@@ -49,14 +47,15 @@ Shader "Unlit/VertexShaderStyle"
                 o.vertex = UnityObjectToClipPos(v.vertex);
                 o.worldNormal = mul(unity_ObjectToWorld, v.normal);
                 o.worldPos = mul(unity_ObjectToWorld, v.vertex);
+                o.color = v.color;
                 return o;
             }
 
-            float3 GetCol(float3 norm, float y)
+            float3 GetCol(float3 norm, float y, float3 mainCol)
             {
                 float underwater = y > 0;
                 float light = dot(norm, _WorldSpaceLightPos0.xyz);
-                float3 ret = lerp(_ColorB, _ColorA, saturate(light));
+                float3 ret = lerp(_ColorB, mainCol, saturate(light));
                 ret += (norm.z * .5 + .5) * _ColorC;
                 float3 underwaterCol = _ColorB;
                 underwaterCol += (norm.y * .5) * _ColorC;
@@ -71,7 +70,7 @@ Shader "Unlit/VertexShaderStyle"
 
             fixed4 frag(v2f i) : SV_Target
             {
-                float3 col = GetCol(i.worldNormal, i.worldPos.y);
+                float3 col = GetCol(i.worldNormal, i.worldPos.y, i.color);
                 float waterLine = pow(saturate(1 - abs(i.worldPos.y)), 10);
                 col += waterLine * _ColorC;
                 return float4(col, 1);
@@ -83,9 +82,9 @@ Shader "Unlit/VertexShaderStyle"
         {
             Tags { "LightMode" = "SRPDefaultUnlit" "Queue" = "Transparent"}
             Cull Front
-            ZWrite Off
-            ZTest Always
-            Blend One One
+            //ZWrite Off
+            //ZTest Always
+            //Blend One One
 
             CGPROGRAM
             #pragma vertex vert
@@ -98,6 +97,7 @@ Shader "Unlit/VertexShaderStyle"
                 float4 vertex : POSITION;
                 float3 normal : NORMAL;
                 float2 uv : TEXCOORD0;
+                float3 color : COLOR0;
             };
 
             struct v2f
@@ -106,14 +106,16 @@ Shader "Unlit/VertexShaderStyle"
                 float3 worldNormal : NORMAL;
                 float4 worldPos : TEXCOORD1;
                 float2 uv : TEXCOORD0;
+                float3 color : COLOR0;
             };
 
             sampler2D _WaterTexture;
 
-            float3 _ColorA;
             float3 _ColorB;
             float3 _ColorC;
             float3 _ReflectColor;
+            float _ReflectionFadeRate;
+            float _ReflectionIntensity;
 
             float3 RayPlaneIntersection(float3 rayOrigin, float3 rayDirection, float3 planeNormal)
             {
@@ -150,13 +152,14 @@ Shader "Unlit/VertexShaderStyle"
                 o.worldPos = mirroredWorld;
                 o.vertex = GetVertex(mirroredWorld);
                 o.uv = GetUV(o.vertex.xy);
+                o.color = v.color;
                 return o;
             }
 
-            float3 GetCol(float3 norm)
+            float3 GetCol(float3 norm, float3 mainCol)
             {
                 float light = dot(norm, _WorldSpaceLightPos0.xyz);
-                float3 ret = lerp(_ColorB, _ColorA, saturate(light));
+                float3 ret = lerp(_ColorB, mainCol, saturate(light));
                 ret += (norm.z * .5 + .5) * _ColorC;
                 return ret;
             }
@@ -164,10 +167,10 @@ Shader "Unlit/VertexShaderStyle"
             fixed4 frag(v2f i) : SV_Target
             {
                 clip(-i.worldPos.y);
-                float3 col = GetCol(i.worldNormal);
-                float toPlane = 1 - saturate(-i.worldPos.y * .1);
+                float3 col = GetCol(i.worldNormal, i.color);
+                float toPlane = 1 - saturate(-i.worldPos.y * _ReflectionFadeRate);
                 toPlane = pow(toPlane, 20);
-                col *= toPlane * .5;
+                col *= toPlane * _ReflectionIntensity;
                 col *= _ReflectColor;
                 return float4(col, 1);
             }
